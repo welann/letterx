@@ -1,0 +1,169 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useWallet } from "@/hooks/use-wallet"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Wallet, Trash2, Calendar } from "lucide-react"
+import { toast } from "sonner"
+import Link from "next/link"
+import { getMyLetters } from "@/lib/lettertools"
+import { Letter } from "@/types/types"
+
+export default function MinePage() {
+  const [letters, setLetters] = useState<Letter[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [letterToDelete, setLetterToDelete] = useState<string | null>(null)
+  const { connected } = useWallet()
+
+  useEffect(() => {
+    async function fetchLetters() {
+      if (connected) {
+        try {
+          const myLetters = await getMyLetters()
+          setLetters(myLetters)
+        } catch (error) {
+          console.error("Error fetching my letters:", error)
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchLetters()
+  }, [connected])
+
+  const handleDelete = (id: string) => {
+    setLetters(letters.filter((letter) => letter.id !== id))
+    setLetterToDelete(null)
+    toast("Letter deleted", {
+      description: "Your letter has been deleted successfully.",
+    })
+  }
+
+  if (!connected) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold mb-6">Connect Your Wallet</h1>
+        <p className="text-muted-foreground mb-8">You need to connect your wallet to view your letters.</p>
+        <Button className="bg-teal-600 hover:bg-teal-700">
+          <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
+        </Button>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">My Letters</h1>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-3/4 mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </CardContent>
+              <CardFooter className="bg-muted/50 px-6 py-3 flex justify-between">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">My Letters</h1>
+
+      {letters.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground mb-4">You havent sent any letters yet.</p>
+          <Button asChild className="bg-teal-600 hover:bg-teal-700">
+            <Link href="/compose">Compose a Letter</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {letters.map((letter: Letter) => (
+            <Card key={letter.id} className="overflow-hidden hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <Link href={`/letters/${letter.id}`} className="block hover:opacity-80 transition-opacity">
+                  <h2 className="text-xl font-semibold mb-2">{letter.subject}</h2>
+                  <p className="text-muted-foreground line-clamp-3">{letter.content}</p>
+                </Link>
+              </CardContent>
+              <CardFooter className="bg-muted/50 px-6 py-3 flex justify-between items-center">
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {new Date(letter.deliveryDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </Badge>
+                <div className="flex items-center gap-2">
+                  <AlertDialog
+                    open={letterToDelete === letter.id}
+                    onOpenChange={(open) => !open && setLetterToDelete(null)}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setLetterToDelete(letter.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your letter.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(letter.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button variant="ghost" asChild className="text-teal-600 hover:text-teal-700 hover:bg-teal-50">
+                    <Link href={`/letters/${letter.id}`}>View</Link>
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
