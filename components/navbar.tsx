@@ -4,19 +4,20 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, Mail, Info, Wallet, Settings, Menu } from "lucide-react"
-import { useWallet } from "@/hooks/use-wallet"
-import SettingsDialog from "./settings-dialog"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetDescription, SheetTitle } from "@/components/ui/sheet"
+import { Home, Mail, Mailbox, Info, Settings, Menu } from "lucide-react"
+import SettingsDialog from "@/components/settings-dialog"
+import { ConnectButton, BaseError, ErrorCode } from '@suiet/wallet-kit';
+
 
 export default function Navbar() {
   const pathname = usePathname()
-  const { connected, connect, disconnect } = useWallet()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const navItems = [
     { href: "/", label: "Home", icon: <Home className="h-4 w-4 mr-2" /> },
     { href: "/compose", label: "Compose", icon: <Mail className="h-4 w-4 mr-2" /> },
+    { href: "/mine", label: "My Letters", icon: <Mailbox className="h-4 w-4 mr-2" /> },
     { href: "/about", label: "About", icon: <Info className="h-4 w-4 mr-2" /> },
   ]
 
@@ -41,20 +42,17 @@ export default function Navbar() {
                 </Link>
               </Button>
             ))}
-
-            {connected && (
-              <Button variant="ghost" asChild className={pathname === "/mine" ? "bg-muted" : ""}>
-                <Link href="/mine">My Letters</Link>
-              </Button>
-            )}
-
-            <Button
-              onClick={connected ? disconnect : connect}
-              className={connected ? "bg-teal-600 hover:bg-teal-700" : ""}
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              {connected ? "Disconnect" : "Connect Wallet"}
-            </Button>
+            <ConnectButton
+              // The BaseError instance has properties like {code, message, details}
+              // for developers to further customize their error handling.
+              onConnectError={(error: BaseError) => {
+                if (error.code === ErrorCode.WALLET__CONNECT_ERROR__USER_REJECTED) {
+                  console.warn('user rejected the connection to ' + error.details?.wallet);
+                } else {
+                  console.warn('unknown connect error: ', error);
+                }
+              }}
+            >Connect Wallet</ConnectButton>
 
             <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)}>
               <Settings className="h-5 w-5" />
@@ -69,7 +67,14 @@ export default function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent>
-              <div className="flex flex-col space-y-4 mt-8">
+              <SheetHeader>
+                <SheetTitle>SUI letters</SheetTitle>
+                <SheetDescription>
+                  Send letters to your future self or loved ones. Choose when theyll be delivered and create memories
+                  that last.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4">
                 {navItems.map((item) => (
                   <Button
                     key={item.href}
@@ -83,24 +88,18 @@ export default function Navbar() {
                     </Link>
                   </Button>
                 ))}
+                <ConnectButton
+                  // The BaseError instance has properties like {code, message, details}
+                  // for developers to further customize their error handling.
+                  onConnectError={(error: BaseError) => {
+                    if (error.code === ErrorCode.WALLET__CONNECT_ERROR__USER_REJECTED) {
+                      console.warn('user rejected the connection to ' + error.details?.wallet);
+                    } else {
+                      console.warn('unknown connect error: ', error);
+                    }
+                  }}
+                >Connect Wallet</ConnectButton>
 
-                {connected && (
-                  <Button
-                    variant="ghost"
-                    asChild
-                    className={pathname === "/mine" ? "justify-start bg-muted" : "justify-start"}
-                  >
-                    <Link href="/mine">My Letters</Link>
-                  </Button>
-                )}
-
-                <Button
-                  onClick={connected ? disconnect : connect}
-                  className={connected ? "justify-start bg-teal-600 hover:bg-teal-700" : "justify-start"}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  {connected ? "Disconnect" : "Connect Wallet"}
-                </Button>
 
                 <Button variant="ghost" className="justify-start" onClick={() => setSettingsOpen(true)}>
                   <Settings className="h-4 w-4 mr-2" />
