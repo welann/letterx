@@ -30,25 +30,25 @@ export default function ComposeForm({ initialData, onComplete }: ComposeFormProp
     fileInputRef.current?.click()
   }
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    setFileError("")
+    const files = Array.from(e.target.files || []);
+    setFileError("");
 
     const newAttachments: Attachment[] = files.map((file) => ({
       id: Math.random().toString(36).substring(2),
       name: file.name,
       type: file.type,
       size: file.size,
-      file,
+      file, // 确保保存原始文件对象
       url: URL.createObjectURL(file),
     }));
 
-    setAttachments([...attachments, ...newAttachments])
+    setAttachments([...attachments, ...newAttachments]);
 
     // Reset the file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   // const removeAttachment = (id: string) => {
   //   setAttachments(attachments.filter((attachment) => attachment.id !== id))

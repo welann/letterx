@@ -150,3 +150,32 @@ export async function getMyLetters(): Promise<Letter[]> {
 //         console.error('Error fetching letters:', error);
 //     }
 // }
+
+// ... existing imports ...
+
+export async function getLetterById(id: string, shouldParseJson: boolean = false, aggregatorUrl: string = "https://aggregator.walrus-testnet.walrus.space") {
+    try {
+        const response = await fetch(`${aggregatorUrl}/v1/blobs/by-object-id/${id}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // 根据参数决定返回格式
+        if (shouldParseJson) {
+            return await response.json();
+        } else {
+            return await response.arrayBuffer(); // 比bytes()更标准的API
+        }
+    } catch (error) {
+        console.error(`Failed to fetch letter ${id}:`, error);
+        return null;
+    }
+}
+
+
+getLetterById(
+    "0xfa18be1a703bb4fc331d03558fcf896c19ccaec4dee57d9614817bdea9937ef7",
+    true,
+    "https://aggregator.walrus-testnet.walrus.space").then(console.log);
+

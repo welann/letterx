@@ -8,10 +8,12 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetDescription, Sheet
 import { Home, Mail, Mailbox, Info, Settings, Menu } from "lucide-react"
 import SettingsDialog from "@/components/settings-dialog"
 import { ConnectButton, BaseError, ErrorCode } from '@suiet/wallet-kit';
-
+// import { useWallet, WalletContextState } from "@suiet/wallet-kit"
+// import { toast } from "sonner"
 
 export default function Navbar() {
   const pathname = usePathname()
+  // const wallet = useWallet();
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const navItems = [
@@ -20,6 +22,37 @@ export default function Navbar() {
     { href: "/mine", label: "My Letters", icon: <Mailbox className="h-4 w-4 mr-2" /> },
     { href: "/about", label: "About", icon: <Info className="h-4 w-4 mr-2" /> },
   ]
+
+  // const handleConnectSuccess = async (wallet: WalletContextState) => {
+  //   if (!wallet.connected || !wallet.account) {
+  //     toast.warning("Wallet not connected yet");
+  //     return;
+  //   }
+
+  //   try {
+  //     const message = "Sign this message to verify your wallet ownership";
+  //     const result = await wallet.signPersonalMessage({
+  //       message: new TextEncoder().encode(message),
+  //     });
+  //     const verifyResult = await wallet.verifySignedMessage(result, new Uint8Array(wallet.account.publicKey))
+  //     if (!verifyResult) {
+  //       toast("Verification Failed", {
+  //         description: "Signing failed",
+  //       });
+  //       console.log('signPersonalMessage succeed, but verify signedMessage failed')
+  //       return null
+  //     } else {
+  //       toast("Verification Successful", {
+  //         description: "Wallet ownership verified",
+  //       });
+  //       console.log('signPersonalMessage succeed, and verify signedMessage succeed!')
+  //       return result;
+  //     }
+  //   } catch (error) {
+  //     console.error("Signing failed:", error);
+  //   }
+  // };
+
 
   return (
     <header className="border-b">
@@ -43,8 +76,7 @@ export default function Navbar() {
               </Button>
             ))}
             <ConnectButton
-              // The BaseError instance has properties like {code, message, details}
-              // for developers to further customize their error handling.
+              // onConnectSuccess={() => { handleConnectSuccess(wallet) }}
               onConnectError={(error: BaseError) => {
                 if (error.code === ErrorCode.WALLET__CONNECT_ERROR__USER_REJECTED) {
                   console.warn('user rejected the connection to ' + error.details?.wallet);

@@ -1,24 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ComposeForm from "@/components/compose-form"
 import DeliverySettings from "@/components/delivery-settings"
-import { useWallet } from "@/hooks/use-wallet"
-import { Button } from "@/components/ui/button"
-import { Wallet } from "lucide-react"
-
+import { useWallet } from '@suiet/wallet-kit'
 import { Attachment, DeliverySettingsType } from "@/types/types"
-
-
+import { uploadToWalrus } from "@/lib/uploadtools"
 interface ComposeData {
   subject: string
   content: string
   attachments: Attachment[]
 }
-
-
 
 export default function ComposePage() {
   const [activeTab, setActiveTab] = useState<'compose' | 'delivery'>('compose')
@@ -27,36 +20,113 @@ export default function ComposePage() {
     content: "",
     attachments: [],
   })
+  const wallet = useWallet();
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettingsType>({
-    deliveryTime: "6 months",
-    customDate: null,
+    deliveryTime: 10,
     visibility: "private",
-    recipients: [""],
-    subscription: "free",
+    recipients: wallet?.address || "",
   })
 
-  const { connected } = useWallet()
-  const router = useRouter()
 
-  // const handleComposeComplete = (data: Letter) => {
-  //   setLetterData(data)
-  //   setActiveTab("delivery")
-  // }
 
-  const handleSendLetter = () => {
-    // In a real app, this would send the letter data to the backend
-    console.log("Sending letter:", { ...letterData, ...deliverySettings })
-    router.push("/")
-  }
+  const handleSendLetter = async () => {
+    try {
+      // 1. 获取walrus链接
+      const walrusLink = localStorage.getItem("walrusLink");
+      if (!walrusLink) throw new Error("Walrus link not configured");
 
-  if (!connected) {
+      // 2. 生成信件唯一标识
+      const letterId = `letterx_${Math.random().toString(36).substring(2, 7)}`;
+
+      // 3. 准备最终要上传的JSON结构
+      const letterJson = {
+        metadata: {
+          id: letterId,
+          subject: letterData.subject,
+          deliveryDate: deliverySettings.deliveryTime,
+          isPublic: deliverySettings.visibility
+        },
+        content: letterData.content,
+        attachments: [] as Array<{
+          originalName: string;
+          blobId: string;
+          objectId?: string;
+          txDigest?: string;
+          status: 'new' | 'existing';
+        }>
+      };
+      console.log("Letter JSON:", letterJson);
+
+      const epochs = Math.max(1, deliverySettings.deliveryTime);
+
+      // 4. 如果有附件，先上传附件
+      if (letterData.attachments.length > 0) {
+        const attachmentUploadResults = await Promise.all(
+          letterData.attachments.map(async (attachment) => {
+            console.log("Uploading attachment:", {
+              baseUrl: walrusLink,
+              epochs: epochs,
+              sendTo: deliverySettings.recipients
+            });
+            const uploadResult = await uploadToWalrus(attachment.file, {
+              baseUrl: walrusLink,
+              epochs: epochs,
+              sendTo: deliverySettings.recipients
+            });
+
+            // 记录附件上传结果
+            return {
+              originalName: attachment.name,
+              blobId: uploadResult.blobId,
+              objectId: uploadResult.objectId,
+              txDigest: uploadResult.txDigest,
+              status: uploadResult.objectId ? 'new' : 'existing'
+            };
+          })
+        );
+
+        letterJson.attachments = attachmentUploadResults.map(result => ({
+          ...result,
+          status: result.objectId ? 'new' as const : 'existing' as const
+        }));
+      }
+
+      // 5. 创建JSON文件并上传
+      const jsonBlob = new Blob([JSON.stringify(letterJson, null, 4)], {
+        type: 'application/json'
+      });
+      console.log("JSON Blob:", jsonBlob);
+      const jsonFile = new File(
+        [jsonBlob],
+        `${letterId}.json`,
+        { type: 'application/json' }
+      );
+      console.log("JSON File:", jsonFile);
+      const finalUploadResult = await uploadToWalrus(jsonFile, {
+        baseUrl: walrusLink,
+        epochs: epochs,
+        sendTo: deliverySettings.recipients
+      });
+
+      console.log("Final upload result:", finalUploadResult);
+      // 6. 返回最终结果
+      return {
+        letterId,
+        contentUpload: finalUploadResult,
+        attachments: letterJson.attachments
+      };
+
+    } catch (error) {
+      console.error("Error sending letter:", error);
+      throw error;
+    }
+  };
+
+  if (!wallet.connected) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-6">Connect Your Wallet</h1>
         <p className="text-muted-foreground mb-8">You need to connect your wallet to compose and send letters.</p>
-        <Button className="bg-teal-600 hover:bg-teal-700">
-          <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
-        </Button>
       </div>
     )
   }

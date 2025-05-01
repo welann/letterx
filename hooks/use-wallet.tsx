@@ -1,61 +1,34 @@
-"use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
-import { toast } from "sonner"
 
-const WalletContext = createContext({
-  connected: false,
-  address: "",
-  connect: () => { },
-  disconnect: () => { },
-})
+import { WalletContextState } from "@suiet/wallet-kit";
+import { toast } from "sonner";
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const [connected, setConnected] = useState(false)
-  const [address, setAddress] = useState("")
+export const handleSignMsg = async (wallet: WalletContextState) => {
+  if (!wallet.connected || !wallet.account) return
 
-  // Check if wallet was previously connected
-  useEffect(() => {
-    const savedConnected = localStorage.getItem("walletConnected")
-    const savedAddress = localStorage.getItem("walletAddress")
-
-    if (savedConnected === "true" && savedAddress) {
-      setConnected(true)
-      setAddress(savedAddress)
+  try {
+    const message = "Sign this message to verify your wallet ownership";
+    const result = await wallet.signPersonalMessage({
+      message: new TextEncoder().encode(message),
+    });
+    const verifyResult = await wallet.verifySignedMessage(result, new Uint8Array(wallet.account.publicKey))
+    if (!verifyResult) {
+      toast("Verification Failed", {
+        description: "Signing failed",
+      });
+      console.log('signPersonalMessage succeed, but verify signedMessage failed')
+      return null
+    } else {
+      toast("Verification Successful", {
+        description: "Wallet ownership verified",
+      });
+      console.log('signPersonalMessage succeed, and verify signedMessage succeed!')
+      return result;
     }
-  }, [])
-
-  const connect = () => {
-    // In a real app, this would connect to a real wallet
-    const mockAddress = "0x" + Math.random().toString(36).substring(2, 15)
-    setConnected(true)
-    setAddress(mockAddress)
-
-    // Save connection state
-    localStorage.setItem("walletConnected", "true")
-    localStorage.setItem("walletAddress", mockAddress)
-
-    toast("Wallet connected", {
-      description: `Connected to ${mockAddress.substring(0, 6)}...${mockAddress.substring(mockAddress.length - 4)}`,
-    })
+  } catch (error) {
+    toast("Verification Failed", {
+      description: error instanceof Error ? error.message : "Signing cancelled",
+    });
+    throw error;
   }
-
-  const disconnect = () => {
-    setConnected(false)
-    setAddress("")
-
-    // Clear connection state
-    localStorage.removeItem("walletConnected")
-    localStorage.removeItem("walletAddress")
-
-    toast("Wallet disconnected",{
-      description: "Your wallet has been disconnected.",
-    })
-  }
-
-  return <WalletContext.Provider value={{ connected, address, connect, disconnect }}>{children}</WalletContext.Provider>
-}
-
-export function useWallet() {
-  return useContext(WalletContext)
-}
+};

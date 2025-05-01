@@ -4,6 +4,7 @@ export interface Attachment {
     type: string
     url: string
     size: number
+    file: File;
 }
 
 export interface Letter {
@@ -29,11 +30,9 @@ export interface ComposeFormProps {
 
 
 export interface DeliverySettingsType {
-    deliveryTime: string
-    customDate: Date | null
+    deliveryTime: number
     visibility: 'private' | 'public'
-    recipients: string[]
-    subscription: string
+    recipients: string
 }
 
 export interface DeliverySettingsProps {

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import LetterAttachments from "@/components/letter-attachments"
-import { getLetterById } from "@/lib/letters"
+// import { getLetterById } from "@/lib/letters"
+import { getLetterById } from "@/lib/lettertools"
 
 import { Letter } from "@/types/types"
 
@@ -73,7 +74,7 @@ export default async function LetterDetailPage({ params }: { params: Letter }) {
             <div className="prose max-w-none mb-8">
               {letter.content
                 .split("\n")
-                .map((paragraph, index) => (paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />))}
+                .map((paragraph: string, index: number) => (paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />))}
             </div>
 
             {hasAttachments && (

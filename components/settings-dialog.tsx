@@ -63,7 +63,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                     <CardDescription>Connect with Walrus for enhanced functionality</CardDescription>
                   </div>
                 </div>
-                <div className="flex items-start space-x-2">
+                {/* <div className="flex items-start space-x-2">
                   <RadioGroupItem value="tusky" id="tusky" />
                   <div className="grid gap-1.5">
                     <Label htmlFor="tusky" className="font-medium">
@@ -71,20 +71,20 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                     </Label>
                     <CardDescription>Connect with Tusky for enhanced functionality</CardDescription>
                   </div>
-                </div>
+                </div> */}
                 <div className="flex items-start space-x-2">
                   <RadioGroupItem value="none" id="none" />
                   <div className="grid gap-1.5">
                     <Label htmlFor="none" className="font-medium">
                       No Integration
                     </Label>
-                    <CardDescription>Use SUI Letters without third-party integrations</CardDescription>
+                    <CardDescription>You must set walrus publisher link first!</CardDescription>
                   </div>
                 </div>
               </RadioGroup>
             </CardContent>
           </Card>
-
+{/* 
           {integration === "tusky" && (
             <div className="space-y-2">
               <Label htmlFor="tusky-link">Tusky Link</Label>
@@ -95,7 +95,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
                 onChange={(e) => setTuskyLink(e.target.value)}
               />
             </div>
-          )}
+          )} */}
 
           {integration === "walrus" && (
             <div className="space-y-2">

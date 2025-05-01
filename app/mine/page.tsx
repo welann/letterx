@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useWallet } from "@/hooks/use-wallet"
+import { useWallet  } from '@suiet/wallet-kit'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,21 +17,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Wallet, Trash2, Calendar } from "lucide-react"
+import {  Trash2, Calendar } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 import { getMyLetters } from "@/lib/lettertools"
 import { Letter } from "@/types/types"
 
+
+
+
 export default function MinePage() {
   const [letters, setLetters] = useState<Letter[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [letterToDelete, setLetterToDelete] = useState<string | null>(null)
-  const { connected } = useWallet()
+  const wallet = useWallet();
 
   useEffect(() => {
     async function fetchLetters() {
-      if (connected) {
+      if (wallet.connected) {
         try {
           const myLetters = await getMyLetters()
           setLetters(myLetters)
@@ -44,7 +47,7 @@ export default function MinePage() {
     }
 
     fetchLetters()
-  }, [connected])
+  }, [wallet])
 
   const handleDelete = (id: string) => {
     setLetters(letters.filter((letter) => letter.id !== id))
@@ -54,14 +57,11 @@ export default function MinePage() {
     })
   }
 
-  if (!connected) {
+  if (!wallet.connected) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-6">Connect Your Wallet</h1>
         <p className="text-muted-foreground mb-8">You need to connect your wallet to view your letters.</p>
-        <Button className="bg-teal-600 hover:bg-teal-700">
-          <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
-        </Button>
       </div>
     )
   }
