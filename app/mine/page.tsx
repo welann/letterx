@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useWallet  } from '@suiet/wallet-kit'
+import { useWallet } from '@suiet/wallet-kit'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,27 +17,85 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {  Trash2, Calendar } from "lucide-react"
+import { Trash2, Calendar } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
-import { getMyLetters } from "@/lib/lettertools"
-import { Letter } from "@/types/types"
+// import { getMyLetters } from "@/lib/lettertools"
+import { Lettertype } from "@/types/types"
 
+// import { useSuiClientQuery } from '@mysten/dapp-kit';
+
+// create a client connected to devnet
 
 
 
 export default function MinePage() {
-  const [letters, setLetters] = useState<Letter[]>([])
+  const [letters, setLetters] = useState<Lettertype[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [letterToDelete, setLetterToDelete] = useState<string | null>(null)
   const wallet = useWallet();
 
+  // const { data, isPending, error, refetch } = useSuiClientQuery('getOwnedObjects', {
+  //   owner: '0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0',
+  // })
+
+  // console.log("data", data)
+  // console.log("isPending", isPending)
+  // console.log("error", error)
+  // console.log("refetch", refetch)
+
+
   useEffect(() => {
+
+    const handleregisterletter = async () => {
+
+      // const client = new SuiClient({ url: rpcUrl });
+
+
+
+      // const Letter = bcs.struct('Letter', {
+      //   blobid: bcs.String,
+      //   endepoch: bcs.U64,
+      //   recipient: bcs.Address, // address在BCS中通常作为string处理
+      //   ispublic: bcs.Bool,
+      // });
+      // const Vletters = bcs.vector(Letter);
+
+      // try {
+      //   //1. 调用合约中的search函数
+      //   //2. 解析返回的两个vector
+      //   console.log("wallet addr: ", wallet.address)
+      //   const tx = new Transaction();
+      //   const packageObjectId = "0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3";
+      //   tx.moveCall({
+      //     target: `${packageObjectId}::lettercontract::searchpublic`,
+      //     arguments: [
+      //       tx.object("0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1"),
+      //       // tx.pure.string(wallet.address ? wallet.address : "0x1"),
+      //     ],
+      //   });
+      //   const resData = await wallet.signAndExecuteTransaction({
+      //     transaction: tx,
+      //   });
+      //   console.log("Letter registered successfully:", JSON.stringify(resData, null, 2));
+
+      //   const pdata = Vletters.fromBase64(resData.effects)
+      //   console.log("pdata", pdata);
+      //   // 将字符串地址转换为Uint8Array格式
+      //   const addr = bcs.Address.parse(pdata[0].recipient)
+      //   console.log("addr", addr)
+      // } catch (error) {
+      //   console.error("Error registering letter:", error);
+      // }
+    }
+
+
     async function fetchLetters() {
       if (wallet.connected) {
         try {
-          const myLetters = await getMyLetters()
-          setLetters(myLetters)
+          handleregisterletter()
+          // const myLetters = await getMyLetters()
+          // setLetters(myLetters)
         } catch (error) {
           console.error("Error fetching my letters:", error)
         } finally {
@@ -56,6 +114,8 @@ export default function MinePage() {
       description: "Your letter has been deleted successfully.",
     })
   }
+
+
 
   if (!wallet.connected) {
     return (
@@ -105,7 +165,7 @@ export default function MinePage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {letters.map((letter: Letter) => (
+          {letters.map((letter: Lettertype) => (
             <Card key={letter.id} className="overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <Link href={`/letters/${letter.id}`} className="block hover:opacity-80 transition-opacity">

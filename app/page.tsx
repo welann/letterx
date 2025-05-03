@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import PublicLetters from "@/components/public-letters"
+// import PublicLetters from "@/components/public-letters"
 
 export default function Home() {
   return (
@@ -28,7 +28,7 @@ export default function Home() {
 
       <div className="mt-16">
         <h2 className="text-3xl font-bold mb-8">Public Letters</h2>
-        <PublicLetters />
+        {/* <PublicLetters /> */}
       </div>
     </div>
   )

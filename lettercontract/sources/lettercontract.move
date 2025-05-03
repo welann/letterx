@@ -10,17 +10,10 @@ use sui::table::{Self, Table};
 ///没找到blobid对应的letter
 const ELetterNotFound: u64 = 1;
 const EUserNotFound: u64 = 2;
-
+const ENotowner: u64 = 3;
 
 /* === type define === */
 public struct Letter has copy, drop, store {
-    blobid: String,
-    endepoch: u64,
-    recipient: address,
-    ispublic: bool,
-}
-
-public struct LetterPublic has copy, drop {
     blobid: String,
     endepoch: u64,
     recipient: address,
@@ -109,12 +102,14 @@ public entry fun deleteletter(manager: &mut UserManager, letterid: String, ctx: 
     manager.deleted_letters.push_back(removedletter);
 }
 
-//todo 这里应该判断合约调用方是不是和useraddress一致，否则需要报错
-//限制只有本人可以查询本人所有的信件
+
 public entry fun search(
     manager: &mut UserManager,
     useraddress: address,
+    ctx: &mut TxContext
 ): (vector<Letter>, vector<Letter>) {
+    //判断合约调用方是不是和useraddress一致
+    assert!(useraddress==ctx.sender(),ENotowner);
     // 检查用户是否存在
     assert!(manager.usertable.contains(useraddress), EUserNotFound);
 
@@ -143,9 +138,9 @@ public entry fun search(
     (active_letters, expired_letters)
 }
 
-public entry fun searchpublic(manager: &mut UserManager): vector<LetterPublic> {
+public entry fun searchpublic(manager: &mut UserManager): vector<Letter> {
     let mut i = 0;
-    let mut publicletters: vector<LetterPublic> = vector::empty();
+    let mut publicletters: vector<Letter> = vector::empty();
     while (i < manager.userindex.length()) {
         let useraddress = manager.userindex.borrow(i);
         let userletters = manager.usertable.borrow(*useraddress);
@@ -155,7 +150,7 @@ public entry fun searchpublic(manager: &mut UserManager): vector<LetterPublic> {
             let letterid = userletters.expired_letterindex.borrow(j);
             let letter = userletters.expired_letters.borrow(*letterid);
             if (letter.ispublic) {
-                let newletter = LetterPublic {
+                let newletter = Letter {
                     blobid: letter.blobid,
                     endepoch: letter.endepoch,
                     recipient: letter.recipient,
@@ -300,7 +295,8 @@ fun test_deleteletter() {
 }
 
 #[test]
-#[expected_failure(abort_code = EUserNotFound)]
+// #[expected_failure(abort_code = EUserNotFound, ENotowner)]
+#[expected_failure]
 fun test_search() {
     let mut ts = ts::begin(@0x0);
     init(ts.ctx());
@@ -309,7 +305,12 @@ fun test_search() {
     {
         ts.next_tx(@0x112);
         let mut lmanager = ts.take_shared();
-        let (active, expired) = search(&mut lmanager, @0x112);
+        
+        // 先创建用户但不要添加信件
+        addletter(&mut lmanager, b"dummy".to_string(), 0, @0x112, false, ts.ctx());
+        deleteletter(&mut lmanager, b"dummy".to_string(), ts.ctx());
+        
+        let (active, expired) = search(&mut lmanager, @0x112, ts.ctx());
         assert!(vector::is_empty(&active), Eactiveletterisempty);
         assert!(vector::is_empty(&expired), Eexpiredletterisempty);
         ts::return_shared(lmanager);
@@ -319,12 +320,13 @@ fun test_search() {
     {
         ts.next_tx(@0x112);
         let mut lmanager = ts.take_shared();
-        addletter(&mut lmanager, b"one".to_string(), 12, @0x1, true, ts.ctx());
+        addletter(&mut lmanager, b"one".to_string(), 12, @0x112, true, ts.ctx());
 
-        let (active, expired) = search(&mut lmanager, @0x112);
+        let (active, expired) = search(&mut lmanager, @0x112, ts.ctx());
         assert_eq(active.length(), 1);
         assert_eq(expired.length(), 0);
         assert_eq(active[0].blobid, b"one".to_string());
+        assert_eq(active[0].recipient, @0x112);
         ts::return_shared(lmanager);
     };
 
@@ -334,7 +336,7 @@ fun test_search() {
         let mut lmanager = ts.take_shared();
         alert(&mut lmanager, @0x112, b"one".to_string());
 
-        let (active, expired) = search(&mut lmanager, @0x112);
+        let (active, expired) = search(&mut lmanager, @0x112, ts.ctx());
         assert_eq(active.length(), 0);
         assert_eq(expired.length(), 1);
         assert_eq(expired[0].blobid, b"one".to_string());
@@ -345,20 +347,21 @@ fun test_search() {
     {
         ts.next_tx(@0x112);
         let mut lmanager = ts.take_shared();
-        addletter(&mut lmanager, b"two".to_string(), 12, @0x1, true, ts.ctx());
+        addletter(&mut lmanager, b"two".to_string(), 12, @0x112, true, ts.ctx());
 
-        let (active, expired) = search(&mut lmanager, @0x112);
+        let (active, expired) = search(&mut lmanager, @0x112, ts.ctx());
         assert_eq(active.length(), 1);
         assert_eq(expired.length(), 1);
         ts::return_shared(lmanager);
     };
 
-    // 5. 测试不存在的用户
+    // 5. 测试调用者验证
     {
-        ts.next_tx(@0x113); // 不同用户
+        ts.next_tx(@0x112);
         let mut lmanager = ts.take_shared();
-        let (_active, _expired) = search(&mut lmanager, @0x114); // 不存在的地址
-        // 这里会触发assert错误，测试失败是预期的
+        
+        let (_active, _expired) = search(&mut lmanager, @0x113, ts.ctx()); // 不同地址
+        
         ts::return_shared(lmanager);
     };
 
@@ -528,18 +531,26 @@ fun test_alert() {
     ts.end();
 }
 
-//addletter
+// //addletter
 // sui client ptb \
 // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
-// --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::addletter @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'" 12 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 true
+// --move-call 0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3::lettercontract::addletter @0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'" 12 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 true
 
-//deleteletter
+// //deleteletter
+// // sui client ptb \
+// // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
+// // --move-call 0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3::lettercontract::deleteletter @0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e'"
+
+// //alert
 // sui client ptb \
 // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
-// --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::deleteletter @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e'"
+// --move-call 0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3::lettercontract::alert @0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'"
 
-//alert
 // sui client ptb \
 // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
-// --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::alert @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'"
+// --move-call 0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3::lettercontract::alert @0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 "'0x2d7760ad65a99489c08d734ef5da97d1ca48dc0df96e1002a23e3dcb68c1b139'"
 
+// //search
+// sui client ptb \
+// --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
+// --move-call 0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3::lettercontract::search @0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 

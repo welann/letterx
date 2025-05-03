@@ -7,7 +7,7 @@ export interface Attachment {
     file: File;
 }
 
-export interface Letter {
+export interface Lettertype {
     id: string
     subject: string
     content: string

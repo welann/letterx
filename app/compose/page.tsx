@@ -132,11 +132,11 @@ export default function ComposePage() {
 
       const letterid = uploadresult.contentUpload.objectId || uploadresult.contentUpload.blobId;
       const tx = new Transaction();
-      const packageObjectId = "0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463";
+      const packageObjectId = "0xdfad80440ad76490232d410646ba2f7652ad911b351f045e80767efddb2a0bb3";
       tx.moveCall({
         target: `${packageObjectId}::lettercontract::addletter`,
         arguments: [
-          tx.object("0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856"),
+          tx.object("0x9bb14ed4792a02543709b267bb1dd0f4d191ee2af800b91d74197f6c50013ba1"),
           tx.pure.string(letterid),
           tx.pure.u64(uploadresult.contentUpload.endEpoch),
           tx.pure.address(deliverySettings.recipients),
