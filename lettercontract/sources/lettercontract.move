@@ -109,6 +109,8 @@ public entry fun deleteletter(manager: &mut UserManager, letterid: String, ctx: 
     manager.deleted_letters.push_back(removedletter);
 }
 
+//todo 这里应该判断合约调用方是不是和useraddress一致，否则需要报错
+//限制只有本人可以查询本人所有的信件
 public entry fun search(
     manager: &mut UserManager,
     useraddress: address,
@@ -526,11 +528,18 @@ fun test_alert() {
     ts.end();
 }
 
+//addletter
 // sui client ptb \
 // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
 // --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::addletter @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'" 12 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 true
 
-
+//deleteletter
 // sui client ptb \
 // --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
 // --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::deleteletter @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e'"
+
+//alert
+// sui client ptb \
+// --assign sender @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 \
+// --move-call 0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463::lettercontract::alert @0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856 @0x56e6362fd530999ec320fcf8b7ab06d9175fdd49ac32aec3ef3d924b7f1cbaa0 "'0x46b4e6072a489f45f4a57d2a79d06809659279dad12ca1a96b48e2a2e7b137be'"
+

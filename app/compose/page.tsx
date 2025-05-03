@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ComposeForm from "@/components/compose-form"
 import DeliverySettings from "@/components/delivery-settings"
+import { Transaction } from "@mysten/sui/transactions";
 import { useWallet } from '@suiet/wallet-kit'
 import { Attachment, DeliverySettingsType } from "@/types/types"
 import { uploadToWalrus } from "@/lib/uploadtools"
@@ -24,7 +25,7 @@ export default function ComposePage() {
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettingsType>({
     deliveryTime: 10,
     visibility: "private",
-    recipients: wallet?.address || "",
+    recipients: wallet?.address || "0x1",
   })
 
 
@@ -122,6 +123,36 @@ export default function ComposePage() {
     }
   };
 
+  const handleregisterletter = async () => {
+    try {
+      //1. 获取最后上传的json文件
+      //2. 判断 有没有objectId，没有的话用blobId
+      //3. 调用钱包签名，上传数据到合约中
+      const uploadresult = await handleSendLetter();
+
+      const letterid = uploadresult.contentUpload.objectId || uploadresult.contentUpload.blobId;
+      const tx = new Transaction();
+      const packageObjectId = "0x481bffff7826cef66f3dae9d58dee8c6193c553a3d47c8fdf15568a997cf9463";
+      tx.moveCall({
+        target: `${packageObjectId}::lettercontract::addletter`,
+        arguments: [
+          tx.object("0x871518f740ebe98e175698066270866a0a461b3dae7c8c0c88526d1bf129e856"),
+          tx.pure.string(letterid),
+          tx.pure.u64(uploadresult.contentUpload.endEpoch),
+          tx.pure.address(deliverySettings.recipients),
+          tx.pure.bool(deliverySettings.visibility === "public"),
+        ],
+      });
+      const resData=await wallet.signAndExecuteTransaction({
+        transaction: tx,
+      });
+
+      console.log("Letter registered successfully:", resData);
+    } catch (error) {
+      console.error("Error registering letter:", error);
+    }
+  }
+
   if (!wallet.connected) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -156,7 +187,7 @@ export default function ComposePage() {
             initialSettings={deliverySettings}
             onSettingsChange={setDeliverySettings}
             onBack={() => setActiveTab("compose")}
-            onSend={handleSendLetter}
+            onSend={handleregisterletter}
           />
         </TabsContent>
       </Tabs>
