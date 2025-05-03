@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-// import { getPublicLetters } from "@/lib/lettertools"
+import { getPublicLetters } from "@/lib/lettertools"
 import { Lettertype } from "@/types/types"
 
 import { Calendar } from "lucide-react"
@@ -18,8 +18,8 @@ export default function PublicLetters() {
   useEffect(() => {
     async function fetchLetters() {
       try {
-        // const publicLetters = await getPublicLetters()
-        // setLetters(publicLetters)
+        const publicLetters = await getPublicLetters()
+        setLetters(publicLetters)
       } catch (error) {
         console.error("Error fetching public letters:", error)
       } finally {
