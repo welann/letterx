@@ -16,4 +16,7 @@ Coming soon... maybe:
 
 # Demo video
 
-![demovideo](./demovideo.mp4)
+
+
+https://github.com/user-attachments/assets/409f030e-a6e5-465d-b599-23e6a2a1dd1d
+
