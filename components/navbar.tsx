@@ -61,7 +61,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Mail className="h-6 w-6 text-teal-600 mr-2" />
-              <span className="text-xl font-bold">SUI Letters</span>
+              <span className="text-xl font-bold">Letterx</span>
             </Link>
           </div>
 
@@ -100,7 +100,7 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>SUI letters</SheetTitle>
+                <SheetTitle>letterx</SheetTitle>
                 <SheetDescription>
                   Send letters to your future self or loved ones. Choose when theyll be delivered and create memories
                   that last.

@@ -9,7 +9,7 @@ export default function Home() {
       <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-none shadow-sm mb-12">
         <CardContent className="p-8 md:p-12">
           <div className="text-center py-8 space-y-6 max-w-3xl mx-auto">
-            <CardTitle className="text-4xl md:text-5xl font-bold">SUI Letters</CardTitle>
+            <CardTitle className="text-4xl md:text-5xl font-bold">Letterx</CardTitle>
             <p className="text-xl text-muted-foreground">
               Send letters to your future self or loved ones. Choose when theyll be delivered and create memories that
               last.

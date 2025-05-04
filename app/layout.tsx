@@ -9,7 +9,7 @@ import { Providers } from "./providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SUI Letters",
+  title: "Letterx",
   description: "Send letters to your future self or loved ones on the SUI blockchain",
 }
 
@@ -26,7 +26,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <footer className="py-6 text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} SUI Letters. All rights reserved.
+              © {new Date().getFullYear()} Letterx. All rights reserved.
             </footer>
           </div>
           <Toaster />

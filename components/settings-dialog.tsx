@@ -84,7 +84,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
               </RadioGroup>
             </CardContent>
           </Card>
-{/* 
+          {/* 
           {integration === "tusky" && (
             <div className="space-y-2">
               <Label htmlFor="tusky-link">Tusky Link</Label>
@@ -99,10 +99,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
           {integration === "walrus" && (
             <div className="space-y-2">
-              <Label htmlFor="walrus-link">Walrus API Key</Label>
+              <Label htmlFor="walrus-link">Walrus Publisher link</Label>
               <Input
                 id="walrus-link"
-                placeholder="Enter your Walrus API key"
+                placeholder="Enter your Walrus Publisher link"
                 value={walrusLink}
                 onChange={(e) => setWalrusLink(e.target.value)}
               />

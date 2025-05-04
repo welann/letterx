@@ -6,7 +6,7 @@ export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <h1 className="text-5xl font-bold mb-6">About SUI Letters</h1>
+        <h1 className="text-5xl font-bold mb-6">About Letterx</h1>
         <p className="text-xl text-muted-foreground">
           A modern platform for sending time-delayed letters on the SUI blockchain
         </p>

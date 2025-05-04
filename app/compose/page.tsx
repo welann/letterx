@@ -25,7 +25,7 @@ export default function ComposePage() {
   const [deliverySettings, setDeliverySettings] = useState<DeliverySettingsType>({
     deliveryTime: 10,
     visibility: "private",
-    recipients: wallet?.address || "0x1",
+    recipients: wallet.address || "",
   })
 
 
@@ -143,7 +143,7 @@ export default function ComposePage() {
           tx.pure.bool(deliverySettings.visibility === "public"),
         ],
       });
-      const resData=await wallet.signAndExecuteTransaction({
+      const resData = await wallet.signAndExecuteTransaction({
         transaction: tx,
       });
 
