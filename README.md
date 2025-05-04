@@ -13,3 +13,7 @@ Currently it can:
 Coming soon... maybe:
 - Browse public letters (when we stop being antisocial)
 - Manage your personal letters 
+
+# Demo video
+
+![demovideo](./demovideo.mp4)
