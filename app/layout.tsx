@@ -11,7 +11,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "SUI Letters",
   description: "Send letters to your future self or loved ones on the SUI blockchain",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -22,16 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-          <Providers>
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <footer className="py-6 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} SUI Letters. All rights reserved.
-              </footer>
-            </div>
-            <Toaster />
-          </Providers>
+        <Providers>
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <footer className="py-6 text-center text-sm text-muted-foreground">
+              © {new Date().getFullYear()} SUI Letters. All rights reserved.
+            </footer>
+          </div>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
